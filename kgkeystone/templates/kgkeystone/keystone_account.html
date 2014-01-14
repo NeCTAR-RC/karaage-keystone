@@ -1,0 +1,36 @@
+<table>
+  <thead>
+    <tr>
+      <th>Active</th>
+      <th>Username</th>
+      <th>Date Created</th>
+      {% if ua.date_deleted %}
+      <th>Date Deleted</th>
+      {% endif %}
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="row1">
+      <td>
+        {% if ua.date_deleted %}
+        <img alt="Not Active" src="{{ STATIC_URL }}img/icon-no.gif" title="Not Active"/>
+        {% else %}
+        {% if ua.is_locked %}
+        <img alt="locked" src="{{ STATIC_URL }}img/lock.png"/>
+        {% else %}
+        <img alt="Active" src="{{ STATIC_URL }}img/icon-yes.gif" title="Active"/>
+        {% endif %}
+        {% endif %}
+      </td>
+      <td>{{ ua.username }}</td>
+      <td>{{ ua.date_created|date }}</td>
+      {% if ua.date_deleted %}
+      <td>{{ ua.date_deleted|date }}</td>
+      {% endif %}
+      {% if not ua.date_deleted and request.user.is_admin %}
+      <td><a class="deletelink" href="{% url 'kg_account_delete' ua.id %}">Delete</a></td>
+      {% endif %}
+    </tr>
+  </tbody>
+</table>
