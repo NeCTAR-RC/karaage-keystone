@@ -1,0 +1,32 @@
+Kgkeystone
+==========
+
+Add the following sippets to your global_setting.py file for karaage::
+
+   INSTALLED_APPS = INSTALLED_APPS + \
+                 ('kgkeystone',
+                  'kgterms',
+                  'json_field',
+                 )
+
+Example datastore configuration::
+
+   DATASTORES['keystone'] =
+        [{
+            'DESCRIPTION': 'Keystone datastore',
+            'ENGINE': 'kgkeystone.datastore.keystone.AccountDataStore',
+            'VERSION': 'v3',
+            'ENDPOINT': 'http://localhost:35357/v3/',
+            'TOKEN': 'ADMIN',
+
+            'LEADER_ROLE': 'TenantManager',
+            'MEMBER_ROLE': 'Member',
+        }]
+
+
+Karaage should also be forced to use the crypt password hasher::
+
+          
+   PASSWORD_HASHERS = (
+       'kgkeystone.hasher.SHA512CryptPasswordHasher',
+   )
