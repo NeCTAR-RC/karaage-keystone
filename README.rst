@@ -3,11 +3,7 @@ Kgkeystone
 
 Add the following sippets to your global_setting.py file for karaage::
 
-   INSTALLED_APPS = INSTALLED_APPS + \
-                 ('kgkeystone',
-                  'kgterms',
-                  'json_field',
-                 )
+   INSTALLED_APPS = INSTALLED_APPS + ('kgkeystone', 'kgterms')
 
 Example datastore configuration::
 
