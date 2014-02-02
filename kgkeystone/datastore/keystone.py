@@ -234,11 +234,10 @@ class AccountDataStore(base.BaseDataStore):
 
     def account_exists(self, username):
         """Does the account exist?"""
-        try:
-            self.keystone.users.get(account.foreign_id)
-        except exceptions.NotFound:
-            return False
-        return True
+        for user in self.keystone.users.list():
+            if user.name == username:
+                return True
+        return False
 
     def get_account_details(self, account):
         """Get the account details"""
