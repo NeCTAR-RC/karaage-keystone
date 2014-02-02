@@ -172,9 +172,9 @@ class Command(BaseCommand):
             return "Error"
         self.create_machine_category()
         self.sync_system_accounts(rcshib_db, keystone_db)
-        # self.sync_users(rcshib_db, keystone_db)
-        # self.sync_projects(keystone_db)
-        # self.sync_permissions(keystone_db)
+        self.sync_users(rcshib_db, keystone_db)
+        self.sync_projects(keystone_db)
+        self.sync_permissions(keystone_db)
 
     def create_machine_category(self):
         self.mc, created = mach_models.MachineCategory.objects.get_or_create(
