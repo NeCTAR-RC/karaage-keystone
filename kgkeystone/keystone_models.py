@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-from json_field import JSONField
+from jsonfield import JSONField
 
 
 class KCredential(models.Model):
