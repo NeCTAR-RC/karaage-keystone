@@ -314,9 +314,15 @@ class Command(BaseCommand):
                 # instition.group.description = IDP_MAPPING[idp]
                 # instition.group.save()
             except inst_models.Institute.DoesNotExist:
+                try:
+                    idp_name = IDP_MAPPING[idp]
+                except KeyError:
+                    print "No mapping for idp %s" % idp
+                    idp_name = idp
+
                 institution = inst_models.Institute.objects.create(
                     saml_entityid=idp,
-                    name=IDP_MAPPING[idp])
+                    name=idp_name)
 
             try:
                 k_user = keystone_models.KUser.objects.using(keystone_db).get(id=rc_user.user_id)
