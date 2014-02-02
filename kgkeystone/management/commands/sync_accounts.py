@@ -138,6 +138,9 @@ IDP_SHORTNAME_MAPPING = {
     'https://idp.scu.edu.au/idp/shibboleth': 'scu',
 }
 
+class MockRole(object):
+    id = "unknown role"
+
 
 def ks_to_django_passwd(password):
     # Convert Keystone style password to Django password.
@@ -266,7 +269,7 @@ class Command(BaseCommand):
                 'date_approved': datetime.now(),
                 'group': group,
                 'description': k_project.description}
-            if k_project.name.startwith('pt-'):
+            if k_project.name.startswith('pt-'):
                 num = k_project.name.split('-')[1]
                 project_data['name'] = 'Project trial %s' % num
                 desc = k_project.description.strip(' personal tenancy.')
