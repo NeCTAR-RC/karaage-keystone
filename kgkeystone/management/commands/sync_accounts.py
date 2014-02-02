@@ -182,11 +182,14 @@ class Command(BaseCommand):
             defaults={'datastore': 'keystone'})
 
     def project_members_by_role(self, keystone_db, project, role):
-        tenant_manager = keystone_models.KRole.objects.using(keystone_db).get(name=role)
+        try:
+            krole = keystone_models.KRole.objects.using(keystone_db).get(name=role)
+        except keystone_models.KRole.DoesNotExist:
+            return
         for member in keystone_models.KUserProjectMetadata.objects.using(keystone_db)\
                                                                   .filter(project=project):
             for role in member.data.get('roles', {}):
-                if role.get('id', None) == tenant_manager.id:
+                if role.get('id', None) == krole.id:
                     yield member
 
     def sync_system_accounts(self, rcshib_db, keystone_db):
@@ -329,8 +332,12 @@ class Command(BaseCommand):
                 person=person, terms=terms, defaults={'when': rc_user.terms})
 
     def sync_permissions(self, keystone_db):
+        # TODO this should use the value from the config file.
         member = keystone_models.KRole.objects.using(keystone_db).get(name='Member')
-        manager = keystone_models.KRole.objects.using(keystone_db).get(name='TenantManager')
+        try:
+            manager = keystone_models.KRole.objects.using(keystone_db).get(name='TenantManager')
+        except keystone_models.KRole.DoesNotExist:
+            manager = MockRole()
 
         for permission in keystone_models.KUserProjectMetadata.objects.using(keystone_db).all():
             try:
