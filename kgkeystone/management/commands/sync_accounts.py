@@ -247,12 +247,13 @@ class Command(BaseCommand):
                     project_manager = self.project_members_by_role(
                         keystone_db, k_project, 'Member').next()
                 except StopIteration:
+                    # Create a group and preserve the group name from keystone
                     group, created = peop_models.Group.objects.get_or_create(
-                        name=k_project.name.lower(),
+                        name=k_project.name,
                         defaults={'foreign_id': k_project.id,
                                   'extra_data': {'keystone_name': k_project.name}})
                     project_data = {
-                        'pid': k_project.name.lower(),
+                        'pid': k_project.name,
                         'institute': inst,
                         'group': group,
                         'description': k_project.description}
@@ -267,7 +268,7 @@ class Command(BaseCommand):
             institute = mach_models.Account.objects.get(
                 foreign_id=project_manager.user_id).person.institute
             project_data = {
-                'pid': k_project.name.lower()[:50],
+                'pid': k_project.name,
                 'institute': institute,
                 'is_active': True,
                 'date_approved': datetime.now(),
