@@ -209,8 +209,9 @@ class Command(BaseCommand):
             except mach_models.Account.DoesNotExist:
                 username = k_user.name
                 email = k_user.extra.get('email', None)
+                short_name = username[:30]
                 person = peop_models.Person.objects.create(username=username,
-                                                           short_name=username,
+                                                           short_name=short_name,
                                                            full_name=username,
                                                            email=email,
                                                            is_systemuser=True,
