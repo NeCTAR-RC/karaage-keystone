@@ -356,7 +356,7 @@ class Command(BaseCommand):
 
             try:
                 group = peop_models.Group.objects.get(foreign_id=permission.project.id)
-            except models.Project.DoesNotExist:
+            except peop_models.Group.DoesNotExist:
                 print "skipping project permission %s" % permission.project.id
                 continue
             for role in permission.data['roles']:
@@ -365,7 +365,6 @@ class Command(BaseCommand):
                     group.members.add(account.person)
                 elif role_id == manager.id:
                     group.project_set.get().leaders.add(account.person)
-
 
     def create_user(self, rc_user, k_user, institution):
         try:
