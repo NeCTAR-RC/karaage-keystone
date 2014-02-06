@@ -322,8 +322,13 @@ class Command(BaseCommand):
                     print "No mapping for idp %s" % idp
                     idp_name = idp
 
+                group, created = peop_models.Group.objects.get_or_create(
+                    name=IDP_SHORTNAME_MAPPING[idp],
+                    defaults={})
+
                 institution = inst_models.Institute.objects.create(
                     saml_entityid=idp,
+                    group=group,
                     name=idp_name)
 
             try:
