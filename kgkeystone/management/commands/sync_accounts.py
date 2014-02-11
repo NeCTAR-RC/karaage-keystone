@@ -307,15 +307,6 @@ class Command(BaseCommand):
             idp = shib_attrs.get('idp', None)
             try:
                 institution = inst_models.Institute.objects.get(saml_entityid=idp)
-                # NOTE: was used to updated existing institutes on
-                # import but it slows down the import so it's not
-                # being done anymore.
-
-                # instition.name = IDP_MAPPING[idp]
-                # instition.save()
-                # instition.group.name = IDP_SHORTNAME_MAPPING[idp]
-                # instition.group.description = IDP_MAPPING[idp]
-                # instition.group.save()
             except inst_models.Institute.DoesNotExist:
                 try:
                     idp_name = IDP_MAPPING[idp]
