@@ -226,14 +226,14 @@ class Command(BaseCommand):
                 user = mach_models.Account.objects.create(foreign_id=k_user.id,
                                                           date_created=datetime.now(),
                                                           machine_category=self.mc,
-                                                          username=k_user.name,
+                                                          username=username,
                                                           person=person)
 
     def sync_projects(self, keystone_db):
         inst, created = inst_models.Institute.objects.get_or_create(name='NeCTAR')
         for k_project in keystone_models.KProject.objects.using(keystone_db).all():
             group, created = peop_models.Group.objects.get_or_create(
-                name=k_project.name.lower(),
+                name=k_project.name,
                 defaults={'foreign_id': k_project.id,
                           'extra_data': {'keystone_name': k_project.name}})
 
@@ -391,7 +391,7 @@ class Command(BaseCommand):
                                                        saml_id=rc_user.persistent_id,
                                                        date_approved=rc_user.terms)
             user = mach_models.Account.objects.create(foreign_id=rc_user.user_id,
-                                                      username=rc_user.email,
+                                                      username=username,
                                                       machine_category=self.mc,
                                                       date_created=rc_user.terms,
                                                       person=person)
