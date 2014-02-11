@@ -182,8 +182,9 @@ class Command(BaseCommand):
 
     def create_machine_category(self):
         self.mc, created = mach_models.MachineCategory.objects.get_or_create(
-            name='Keystone',
-            defaults={'datastore': 'keystone'})
+            name='default',
+            defaults={'datastore': 'default'})
+        return self.mc
 
     def project_members_by_role(self, keystone_db, project, role):
         try:
@@ -289,10 +290,8 @@ class Command(BaseCommand):
                 defaults=project_data)
 
     def sync_users(self, rcshib_db, keystone_db):
-        mc, created = mach_models.MachineCategory.objects.get_or_create(name='NeCTAR',
-                                                               defaults={'datastore': 'dummy'})
         terms, created = terms_models.Terms.objects.get_or_create(title='Terms and Conditions',
-                                                                  defaults={'machine': mc})
+                                                                  defaults={'machine': self.mc})
 
         for rc_user in rcshib_models.RCUser.objects.using(rcshib_db).all():
             try:
