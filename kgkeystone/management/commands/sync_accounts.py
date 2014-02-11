@@ -124,7 +124,8 @@ IDP_SHORTNAME_MAPPING = {
     'https://vho.aaf.edu.au/idp/shibboleth': 'aaf-vho',
     'https://idp.monash.edu.au/idp/shibboleth': 'monash',
     'https://idp.jcu.edu.au/idp/shibboleth': 'jcu',
-    'https://idp.sf.utas.edu.au/idp/shibboleth': 'tpac',
+    # TODO the tpac tenant need to have it's name changed.
+    'https://idp.sf.utas.edu.au/idp/shibboleth': 'tpac1',
     'https://idp.uwa.edu.au/idp/shibboleth': 'uwa',
     'https://idp.unimelb.edu.au/idp/shibboleth': 'unimelb',
     'urn:mace:federation.org.au:testfed:au-idp.adelaide.edu.au': 'adelaide',
