@@ -358,7 +358,7 @@ class Command(BaseCommand):
         for permission in keystone_models.KUserProjectMetadata.objects.using(keystone_db).all():
             try:
                 account = mach_models.Account.objects.get(foreign_id=permission.user_id)
-            except models.User.DoesNotExist:
+            except mach_models.Account.DoesNotExist:
                 print "skipping user permission %s" % permission.user_id
                 continue
 
