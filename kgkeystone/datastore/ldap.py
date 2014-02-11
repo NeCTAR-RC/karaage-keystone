@@ -61,7 +61,6 @@ class AccountDataStore(BaseAccountDataStore):
             luser.o = person.institute.name
             luser.gidNumber = lgroup.gidNumber
             luser.userPassword = '{crypt}' + django_to_passlib(person.password).encode('latin1')
-            print luser.userPassword
             luser.homeDirectory = self._home_directory % {
                 'default_project': default_project,
                 'uid': person.username }
