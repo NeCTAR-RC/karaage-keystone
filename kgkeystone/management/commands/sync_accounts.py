@@ -171,9 +171,13 @@ class Command(BaseCommand):
                 print "--keystone_database is required."
             return "Error"
         self.create_machine_category()
+        print "Syncing system accounts"
         self.sync_system_accounts(rcshib_db, keystone_db)
+        print "Syncing user accounts"
         self.sync_users(rcshib_db, keystone_db)
+        print "Syncing projects"
         self.sync_projects(keystone_db)
+        print "Syncing permissions"
         self.sync_permissions(keystone_db)
 
     def create_machine_category(self):
