@@ -168,7 +168,9 @@ class AccountDataStore(base.BaseDataStore):
                 self.keystone.users.update(user, **person_data)
                 return
         logger.debug("Creating User: %s" % person_data)
-        self.keystone.users.create(**person_data)
+        kaccount = self.keystone.users.create(**person_data)
+        account.foreign_id = kaccount.id
+        account.save()
 
     def delete_account(self, account):
         """Account was deleted."""
@@ -296,7 +298,10 @@ class AccountDataStore(base.BaseDataStore):
                 self.keystone.projects.update(proj, **project_data)
                 return
         logger.debug("Creating project: %s" % project_data)
-        self.keystone.projects.create(**project_data)
+        kproject = self.keystone.projects.create(**project_data)
+        group = project.group
+        group.foreign_id = kproject.id
+        group.save()
 
     def delete_project(self, project):
         """Project was deleted."""
