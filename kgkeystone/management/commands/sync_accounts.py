@@ -221,7 +221,7 @@ class Command(BaseCommand):
                                                            email=email,
                                                            is_systemuser=True,
                                                            institute=inst,
-                                                           password=k_user.password,
+                                                           password=ks_to_django_passwd(k_user.password),
                                                            date_approved=datetime.now())
                 user = mach_models.Account.objects.create(foreign_id=k_user.id,
                                                           date_created=datetime.now(),
@@ -387,7 +387,7 @@ class Command(BaseCommand):
                                                        full_name=rc_user.displayname,
                                                        email=rc_user.email,
                                                        institute=institution,
-                                                       password=k_user.password,
+                                                       password=ks_to_django_passwd(k_user.password),
                                                        saml_id=rc_user.persistent_id,
                                                        date_approved=rc_user.terms)
             user = mach_models.Account.objects.create(foreign_id=rc_user.user_id,
