@@ -256,6 +256,8 @@ class Command(BaseCommand):
                     project_data = {
                         'pid': k_project.name[:30],
                         'institute': inst,
+                        'is_active': True,
+                        'is_approved': True,
                         'group': group,
                         'description': k_project.description}
                     if not ('@' in k_project.name or 'pt-' in k_project.name):
@@ -272,6 +274,7 @@ class Command(BaseCommand):
                 'pid': k_project.name[:30],
                 'institute': institute,
                 'is_active': True,
+                'is_approved': True,
                 'date_approved': datetime.now(),
                 'group': group,
                 'description': k_project.description}
@@ -356,6 +359,7 @@ class Command(BaseCommand):
             except peop_models.Group.DoesNotExist:
                 print "skipping project permission %s" % permission.project.id
                 continue
+
             for role in permission.data['roles']:
                 role_id = role['id']
                 if role_id == member.id:
