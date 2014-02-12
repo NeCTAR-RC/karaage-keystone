@@ -19,6 +19,8 @@
 import logging
 
 from karaage.datastores import base
+from karaage.people.models import Group
+from karaage.projects.models import Project
 
 from keystoneclient import client
 from keystoneclient import exceptions
@@ -150,6 +152,47 @@ class AccountDataStore(base.BaseDataStore):
     # ACCOUNT #
     ###########
 
+    def _check_membership(self, members, account, project, role):
+        check_role = self.keystone.roles.check
+        grant_role = self.keystone.roles.grant
+        revoke_role = self.keystone.roles.revoke
+
+        logger.debug("Project: %s" % project)
+        if members.filter(id=account.id).exists():
+            # if the account is a member grant the role if they
+            # don't have it
+            grant_role(role, user=account.foreign_id, project=project.id)
+        else:
+            # if the account isn't a member of the project then
+            # revoke the role if they have it.
+            try:
+                revoke_role(role, user=account.foreign_id, project=project.id)
+            except exceptions.NotFound:
+                pass
+
+    def _heal_account(self, account):
+        ks_projects = self.keystone.projects.list(user=account.foreign_id)
+        projects = set(proj.group.foreign_id for proj in account.person.projects)
+
+        for ks_project in ks_projects:
+            # Remove projects from the list of Karaage recorded
+            # projects
+            projects.remove(ks_project.id)
+
+            # Check Member role
+            group = Group.objects.get(foreign_id=ks_project.id)
+            self._check_membership(group.members, account, ks_project, self._member_role())
+
+            # Check Leader role
+            project = Project.objects.get(group=group)
+            self._check_membership(project.leaders, account, ks_project, self._leader_role())
+
+        # Add memberships to projects that are missing them.
+        for project_id in projects:
+            group = Group.objects.get(foreign_id=project_id)
+            project = Project.objects.get(group=group)
+            self.add_account_to_project(account, project)
+
     def edit_form(self, account):
         """Return the edit form for this account type."""
         from kgkeystone.forms import AccountDetails
@@ -166,6 +209,7 @@ class AccountDataStore(base.BaseDataStore):
             else:
                 logger.debug("Updating User: %s" % person_data)
                 self.keystone.users.update(user, **person_data)
+                self._heal_account(account)
                 return
         logger.debug("Creating User: %s" % person_data)
         kaccount = self.keystone.users.create(**person_data)
