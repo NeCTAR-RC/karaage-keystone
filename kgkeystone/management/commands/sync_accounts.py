@@ -177,7 +177,8 @@ class Command(BaseCommand):
                 print "--keystone_database is required."
             return "Error"
         self.create_machine_category()
-        print "Syncing system accounts"
+        self.disable_keystone_datastore()
+        print "Skipping system accounts"
         self.sync_system_accounts(rcshib_db, keystone_db)
         print "Syncing user accounts"
         self.sync_users(rcshib_db, keystone_db)
@@ -191,6 +192,13 @@ class Command(BaseCommand):
             name='default',
             defaults={'datastore': 'default'})
         return self.mc
+
+    def disable_keystone_datastore(self):
+        datastores = settings.DATASTORES['default']
+        settings.DATASTORES['default'] = []
+        for datastore in datastores:
+            if datastore['ENGINE'] != 'kgkeystone.datastore.keystone.AccountDataStore':
+                settings.DATASTORES['default'].append(datastore)
 
     def project_members_by_role(self, keystone_db, project, role):
         try:
