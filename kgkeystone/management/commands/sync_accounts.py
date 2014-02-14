@@ -161,6 +161,11 @@ class Command(BaseCommand):
                     help='Keystone DB to use'),
         )
 
+    def __init__(self, *args, **kwargs):
+        super(Command, self).__init__(*args, **kwargs)
+        self.system_projects = {}
+        self.system_users = {}
+
     def handle(self, **options):
         verbose = int(options.get('verbosity', 0))
         rcshib_db = options.get('rcshib_database', None)
@@ -204,31 +209,9 @@ class Command(BaseCommand):
             if rcshib_models.RCUser.objects.using(rcshib_db).filter(user_id=k_user.id).count() > 0:
                 continue
 
-            try:
-                user = mach_models.Account.objects.get(foreign_id=k_user.id)
-                if not user.person.is_systemuser:
-                    continue
-                user.person.username = k_user.name
-                user.person.email = k_user.extra.get('email', None)
-                user.person.password = ks_to_django_passwd(k_user.password)
-                user.person.save()
-            except mach_models.Account.DoesNotExist:
-                username = k_user.name
-                email = k_user.extra.get('email', None)
-                short_name = username[:30]
-                person = peop_models.Person.objects.create(username=username,
-                                                           short_name=short_name,
-                                                           full_name=username,
-                                                           email=email,
-                                                           is_systemuser=True,
-                                                           institute=inst,
-                                                           password=ks_to_django_passwd(k_user.password),
-                                                           date_approved=datetime.now())
-                user = mach_models.Account.objects.create(foreign_id=k_user.id,
-                                                          date_created=datetime.now(),
-                                                          machine_category=self.mc,
-                                                          username=username,
-                                                          person=person)
+            self.system_users[k_user.id] = k_user.name
+            print("INFO: identified system user: %s (%s)" % (k_user.name, k_user.id))
+            continue
 
     def sync_projects(self, keystone_db):
         inst, created = inst_models.Institute.objects.get_or_create(name='NeCTAR')
@@ -268,8 +251,19 @@ class Command(BaseCommand):
                         name=k_project.name,
                         defaults=project_data)
                     continue
-            institute = mach_models.Account.objects.get(
-                foreign_id=project_manager.user_id).person.institute
+            try:
+                institute = mach_models.Account.objects.get(
+                    foreign_id=project_manager.user_id).person.institute
+            except mach_models.Account.DoesNotExist:
+                if project_manager.user_id in self.system_users:
+                    print "INFO: skipping project %s owned by system user %s." % \
+                        (k_project.name, self.system_users[project_manager.user_id])
+                    self.system_projects[k_project.id] = k_project.name
+                else:
+                    print "WARNING: project %s member %s can't be found." % \
+                        (k_project.name, project_manager.user_id)
+                continue
+
             project_data = {
                 'pid': k_project.name[:30],
                 'institute': institute,
@@ -298,13 +292,13 @@ class Command(BaseCommand):
             try:
                 shib_attrs = cPickle.loads(rc_user.shibboleth_attributes)
             except:
-                print "User %s, never sent any shibboleth attributes." % rc_user.id
+                print "WARNING: user %s, never sent any shibboleth attributes." % rc_user.id
                 continue
             if rc_user.state != 'created':
-                print "User %s, never had an account created." % rc_user.id
+                print "WARNING: user %s, never had an account created." % rc_user.id
                 continue
             if not rc_user.user_id:
-                print "User %s, never had an account created (and is in an invalid state)." % rc_user.id
+                print "WARNING: user %s, never had an account created (and is in an invalid state)." % rc_user.id
                 continue
 
             idp = shib_attrs.get('idp', None)
@@ -314,7 +308,7 @@ class Command(BaseCommand):
                 try:
                     idp_name = IDP_MAPPING[idp]
                 except KeyError:
-                    print "No mapping for idp %s" % idp
+                    print "WARNING: no mapping for idp %s" % idp
                     idp_name = idp
 
                 group, created = peop_models.Group.objects.get_or_create(
@@ -329,7 +323,7 @@ class Command(BaseCommand):
             try:
                 k_user = keystone_models.KUser.objects.using(keystone_db).get(id=rc_user.user_id)
             except:
-                print "User %s, %s is missing from keystone." % (rc_user.id, rc_user.displayname)
+                print "WARNING: user %s, %s is missing from keystone." % (rc_user.id, rc_user.displayname)
                 continue
 
             # Create the user
@@ -351,13 +345,22 @@ class Command(BaseCommand):
             try:
                 account = mach_models.Account.objects.get(foreign_id=permission.user_id)
             except mach_models.Account.DoesNotExist:
-                print "skipping user permission %s" % permission.user_id
+                if permission.user_id in self.system_users:
+                    print "INFO: skipping system user %s permission on %s" % \
+                        (self.system_users[permission.user_id], permission.project.name)
+                else:
+                    print "WARNING: user %s missing" % permission.user_id
                 continue
 
             try:
                 group = peop_models.Group.objects.get(foreign_id=permission.project.id)
             except peop_models.Group.DoesNotExist:
-                print "skipping project permission %s" % permission.project.id
+                if permission.project.id in self.system_projects:
+                    print "INFO: skipping project %s owned by system user %s." % \
+                        (k_project.name, self.system_users[project_manager.user_id])
+                else:
+                    print "WARNING: project %s (%s) can't be found." % \
+                        (k_project.name, k_project.id)
                 continue
 
             for role in permission.data['roles']:
