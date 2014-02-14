@@ -237,7 +237,7 @@ class Command(BaseCommand):
                         keystone_db, k_project, 'Member').next()
                 except StopIteration:
                     project_data = {
-                        'pid': k_project.name[:30],
+                        'pid': k_project.name,
                         'institute': inst,
                         'is_active': True,
                         'is_approved': True,
@@ -265,7 +265,7 @@ class Command(BaseCommand):
                 continue
 
             project_data = {
-                'pid': k_project.name[:30],
+                'pid': k_project.name,
                 'institute': institute,
                 'is_active': True,
                 'is_approved': True,
