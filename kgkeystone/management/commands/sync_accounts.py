@@ -19,7 +19,8 @@
 from datetime import datetime
 from optparse import make_option
 import cPickle
-import pprint
+import logging
+import sys
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
@@ -33,6 +34,17 @@ from kgterms import models as terms_models
 from kgkeystone import keystone_models
 from kgkeystone import rcshib_models
 from kgkeystone import models
+
+root = logging.getLogger()
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+root.addHandler(ch)
+
+LOG = logging.getLogger('sync_accounts')
+LOG.setLevel(logging.INFO)
 
 IDP_MAPPING = {
     'https://aaf-login.uts.edu.au/idp/shibboleth': 'University of Technology, Sydney',
@@ -178,13 +190,13 @@ class Command(BaseCommand):
             return "Error"
         self.create_machine_category()
         self.disable_keystone_datastore()
-        print "Skipping system accounts"
+        LOG.info("Skipping system accounts")
         self.sync_system_accounts(rcshib_db, keystone_db)
-        print "Syncing user accounts"
+        LOG.info("Syncing user accounts")
         self.sync_users(rcshib_db, keystone_db)
-        print "Syncing projects"
+        LOG.info("Syncing projects")
         self.sync_projects(keystone_db)
-        print "Syncing permissions"
+        LOG.info("Syncing permissions")
         self.sync_permissions(keystone_db)
 
     def create_machine_category(self):
@@ -218,7 +230,7 @@ class Command(BaseCommand):
                 continue
 
             self.system_users[k_user.id] = k_user.name
-            print("INFO: identified system user: %s (%s)" % (k_user.name, k_user.id))
+            LOG.info("identified system user: %s (%s)" % (k_user.name, k_user.id))
             continue
 
     def sync_projects(self, keystone_db):
@@ -264,12 +276,12 @@ class Command(BaseCommand):
                     foreign_id=project_manager.user_id).person.institute
             except mach_models.Account.DoesNotExist:
                 if project_manager.user_id in self.system_users:
-                    print "INFO: skipping project %s owned by system user %s." % \
-                        (k_project.name, self.system_users[project_manager.user_id])
+                    LOG.info("skipping project %s owned by system user %s." % \
+                             (k_project.name, self.system_users[project_manager.user_id]))
                     self.system_projects[k_project.id] = k_project.name
                 else:
-                    print "WARNING: project %s member %s can't be found." % \
-                        (k_project.name, project_manager.user_id)
+                    LOG.warning("project %s member %s can't be found." % \
+                                (k_project.name, project_manager.user_id))
                 continue
 
             project_data = {
@@ -300,13 +312,13 @@ class Command(BaseCommand):
             try:
                 shib_attrs = cPickle.loads(rc_user.shibboleth_attributes)
             except:
-                print "WARNING: user %s, never sent any shibboleth attributes." % rc_user.id
+                LOG.warning("user %s, never sent any shibboleth attributes." % rc_user.id)
                 continue
             if rc_user.state != 'created':
-                print "WARNING: user %s, never had an account created." % rc_user.id
+                LOG.warning("user %s, never had an account created." % rc_user.id)
                 continue
             if not rc_user.user_id:
-                print "WARNING: user %s, never had an account created (and is in an invalid state)." % rc_user.id
+                LOG.warning("user %s, never had an account created (and is in an invalid state)." % rc_user.id)
                 continue
 
             idp = shib_attrs.get('idp', None)
@@ -316,7 +328,7 @@ class Command(BaseCommand):
                 try:
                     idp_name = IDP_MAPPING[idp]
                 except KeyError:
-                    print "WARNING: no mapping for idp %s" % idp
+                    LOG.warning("no mapping for idp %s" % idp)
                     idp_name = idp
 
                 group, created = peop_models.Group.objects.get_or_create(
@@ -331,7 +343,7 @@ class Command(BaseCommand):
             try:
                 k_user = keystone_models.KUser.objects.using(keystone_db).get(id=rc_user.user_id)
             except:
-                print "WARNING: user %s, %s is missing from keystone." % (rc_user.id, rc_user.displayname)
+                LOG.warning("user %s, %s is missing from keystone." % (rc_user.id, rc_user.displayname))
                 continue
 
             # Create the user
@@ -354,21 +366,21 @@ class Command(BaseCommand):
                 account = mach_models.Account.objects.get(foreign_id=permission.user_id)
             except mach_models.Account.DoesNotExist:
                 if permission.user_id in self.system_users:
-                    print "INFO: skipping system user %s permission on %s" % \
-                        (self.system_users[permission.user_id], permission.project.name)
+                    LOG.info("skipping system user %s permission on %s" % \
+                             (self.system_users[permission.user_id], permission.project.name))
                 else:
-                    print "WARNING: user %s missing" % permission.user_id
+                    LOG.warning("user %s missing" % permission.user_id)
                 continue
 
             try:
                 group = peop_models.Group.objects.get(foreign_id=permission.project.id)
             except peop_models.Group.DoesNotExist:
                 if permission.project.id in self.system_projects:
-                    print "INFO: skipping project %s owned by system user %s." % \
-                        (k_project.name, self.system_users[project_manager.user_id])
+                    LOG.info("skipping project %s owned by system user %s." % \
+                             (k_project.name, self.system_users[project_manager.user_id]))
                 else:
-                    print "WARNING: project %s (%s) can't be found." % \
-                        (k_project.name, k_project.id)
+                    LOG.warning("project %s (%s) can't be found." % \
+                                (k_project.name, k_project.id))
                 continue
 
             for role in permission.data['roles']:
