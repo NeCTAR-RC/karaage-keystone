@@ -281,7 +281,9 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         """Add account to project."""
         roles = [self._member_role()]
         if project.leaders.filter(id=account.person.id).exists():
-            roles.append(self._leader_role())
+            leader_role = self._leader_role()
+            if leader_role:
+                roles.append(leader_role)
 
         for role in roles:
             logger.info("Granting User %s role %s in %s" % (account, role, project))
@@ -292,7 +294,9 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         """Remove account from project."""
         roles = [self._member_role()]
         if project.leaders.filter(id=account.person.id).exists():
-            roles.append(self._leader_role())
+            leader_role = self._leader_role()
+            if leader_role:
+                roles.append(leader_role)
 
         for role in roles:
             logger.info("Revoking User %s role %s in %s" % (account, role, project))
