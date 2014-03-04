@@ -303,6 +303,9 @@ class Command(BaseCommand):
             project, created = proj_models.Project.objects.get_or_create(
                 name=k_project.name,
                 defaults=project_data)
+            project_quota, created = proj_models.ProjectQuota.objects.get_or_create(
+                project=project,
+                machine_category=self.mc)
 
     def sync_users(self, rcshib_db, keystone_db):
         terms, created = terms_models.Terms.objects.get_or_create(title='Terms and Conditions',
