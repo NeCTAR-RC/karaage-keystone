@@ -188,7 +188,9 @@ class Command(BaseCommand):
             if keystone_db is None:
                 print "--keystone_database is required."
             return "Error"
+        LOG.info("Creating initial objects")
         self.create_machine_category()
+        self.create_institute()
         self.disable_keystone_datastore()
         LOG.info("Skipping system accounts")
         self.sync_system_accounts(rcshib_db, keystone_db)
@@ -200,6 +202,10 @@ class Command(BaseCommand):
         self.sync_default_project(rcshib_db, keystone_db)
         LOG.info("Syncing permissions")
         self.sync_permissions(keystone_db)
+
+    def create_institute(self):
+        self.institute, created = inst_models.Institute.objects.get_or_create(name='NeCTAR')
+        return self.institute
 
     def create_machine_category(self):
         self.mc, created = mach_models.MachineCategory.objects.get_or_create(
@@ -226,7 +232,6 @@ class Command(BaseCommand):
                     yield member
 
     def sync_system_accounts(self, rcshib_db, keystone_db):
-        inst, created = inst_models.Institute.objects.get_or_create(name='NeCTAR')
         for k_user in keystone_models.KUser.objects.using(keystone_db).all():
             if rcshib_models.RCUser.objects.using(rcshib_db).filter(user_id=k_user.id).count() > 0:
                 continue
@@ -236,7 +241,6 @@ class Command(BaseCommand):
             continue
 
     def sync_projects(self, keystone_db):
-        inst, created = inst_models.Institute.objects.get_or_create(name='NeCTAR')
         for k_project in keystone_models.KProject.objects.using(keystone_db).all():
             group, created = peop_models.Group.objects.get_or_create(
                 name=k_project.name,
@@ -260,7 +264,7 @@ class Command(BaseCommand):
                 except StopIteration:
                     project_data = {
                         'pid': k_project.name,
-                        'institute': inst,
+                        'institute': self.institute,
                         'is_active': True,
                         'is_approved': True,
                         'group': group,
