@@ -196,6 +196,8 @@ class Command(BaseCommand):
         self.sync_users(rcshib_db, keystone_db)
         LOG.info("Syncing projects")
         self.sync_projects(keystone_db)
+        LOG.info("Syncing user's default projects")
+        self.sync_default_project(rcshib_db, keystone_db)
         LOG.info("Syncing permissions")
         self.sync_permissions(keystone_db)
 
@@ -355,6 +357,38 @@ class Command(BaseCommand):
             # Add the terms and conditions if they don't exist
             aterms, created = terms_models.UserAgreed.objects.get_or_create(
                 person=person, terms=terms, defaults={'when': rc_user.terms})
+
+    def sync_default_project(self, rcshib_db, keystone_db):
+        for rc_user in rcshib_models.RCUser.objects.using(rcshib_db).all():
+            try:
+                shib_attrs = cPickle.loads(rc_user.shibboleth_attributes)
+            except:
+                continue
+            if rc_user.state != 'created':
+                continue
+            if not rc_user.user_id:
+                continue
+
+            try:
+                k_user = keystone_models.KUser.objects.using(keystone_db).get(id=rc_user.user_id)
+            except:
+                continue
+
+            try:
+                user = mach_models.Account.objects.get(foreign_id=rc_user.user_id)
+            except mach_models.Account.DoesNotExist:
+                LOG.warning("user %s, can't be found." % rc_user.id)
+                continue
+
+            try:
+                group = peop_models.Group.objects.get(foreign_id=k_user.default_project_id)
+            except peop_models.Group.DoesNotExist:
+                LOG.warning("group %s, can't be found." % k_user.default_project_id)
+                continue
+
+            project = group.project_set.get()
+            user.default_project = project
+            user.save()
 
     def sync_permissions(self, keystone_db):
         # TODO this should use the value from the config file.
