@@ -16,6 +16,8 @@
 # along with karaage-keystone If not, see
 # <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+
 import logging
 
 from django.db import models
@@ -61,3 +63,8 @@ def _leaders_changed(sender, instance, action, reverse, model, pk_set, **kwargs)
                 _remove_person_from_group(person, group)
 
 models.signals.m2m_changed.connect(_leaders_changed, sender=proj_models.Project.leaders.through)
+
+
+class ProjectRenamed(models.Model):
+    project = models.ForeignKey(proj_models.Project, related_name='has_been_renamed')
+    renamed = models.BooleanField(default=False)
