@@ -191,6 +191,7 @@ class Command(BaseCommand):
         LOG.info("Creating initial objects")
         self.create_machine_category()
         self.create_institute()
+        self.create_admin_person()
         self.disable_keystone_datastore()
         LOG.info("Skipping system accounts")
         self.sync_system_accounts(rcshib_db, keystone_db)
@@ -202,6 +203,19 @@ class Command(BaseCommand):
         self.sync_default_project(rcshib_db, keystone_db)
         LOG.info("Syncing permissions")
         self.sync_permissions(keystone_db)
+
+    def create_admin_person(self):
+        self.admin, created = peop_models.Person.objects.get_or_create(
+            username='tom-karaage',
+            defaults={'email': 'no-reply@rc.nectar.org.au',
+                      'full_name': 'TOM Fifield',
+                      'short_name': 'TOM',
+                      'institute': self.institute,
+                      'is_admin': True,
+                      'is_active': True,
+                      'comment': 'Accounts approved by this user were part of The Original Migration.'
+                  })
+        return self.admin
 
     def create_institute(self):
         self.institute, created = inst_models.Institute.objects.get_or_create(name='NeCTAR')
@@ -267,6 +281,7 @@ class Command(BaseCommand):
                         'institute': self.institute,
                         'is_active': True,
                         'is_approved': True,
+                        'approved_by': self.admin,
                         'group': group,
                         'description': k_project.description}
                     if not ('@' in k_project.name or 'pt-' in k_project.name):
@@ -295,6 +310,7 @@ class Command(BaseCommand):
                 'institute': institute,
                 'is_active': True,
                 'is_approved': True,
+                'approved_by': self.admin,
                 'date_approved': datetime.now(),
                 'group': group,
                 'description': k_project.description}
@@ -444,6 +460,7 @@ class Command(BaseCommand):
                                                        full_name=rc_user.displayname,
                                                        email=rc_user.email,
                                                        institute=institution,
+                                                       approved_by=self.admin,
                                                        password=ks_to_django_passwd(k_user.password),
                                                        saml_id=rc_user.persistent_id,
                                                        date_approved=rc_user.terms)
