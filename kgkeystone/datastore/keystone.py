@@ -51,7 +51,7 @@ def project_to_os(project):
             'enabled': project.is_active}
 
 
-class AccountDataStore(base.BaseDataStore):
+class GlobalDataStore(base.GlobalDataStore):
     """Keystone enabled datastores."""
 
     def __init__(self, config):
@@ -147,6 +147,54 @@ class AccountDataStore(base.BaseDataStore):
             return False
         return True
 
+    #########
+    # GROUP #
+    #########
+
+    def save_group(self, group):
+        """Group was saved."""
+        logger.debug("Backend doesn't support saving a group.")
+
+    def delete_group(self, group):
+        """Group was deleted."""
+        logger.debug("Backend doesn't support deleting a group.")
+
+    def set_group_name(self, group, old_name, new_name):
+        """Group was renamed."""
+        logger.debug("Backend doesn't support setting a group name.")
+
+    def get_group_details(self, group):
+        """Get the group details."""
+        logger.debug("Backend doesn't support getting group details.")
+        return {}
+
+
+class MachineCategoryDataStore(base.MachineCategoryDataStore):
+    """Keystone enabled datastores."""
+
+    def __init__(self, config):
+        self.config = config
+        self._endpoint = config['ENDPOINT']
+        self._token = config['TOKEN']
+        self._version = config.get('VERSION', None)
+        self._leader_role_name = config['LEADER_ROLE']
+        self._member_role_name = config['MEMBER_ROLE']
+
+        self.keystone = client.Client(
+            version=self._version,
+            token=self._token,
+            endpoint=self._endpoint)
+
+    def _get_role(self, name):
+        for role in self.keystone.roles.list():
+            if role.name == name:
+                return role
+
+    def _member_role(self):
+        return self._get_role(self._member_role_name)
+
+    def _leader_role(self):
+        return self._get_role(self._leader_role_name)
 
     ###########
     # ACCOUNT #
