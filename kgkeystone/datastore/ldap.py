@@ -18,7 +18,9 @@
 
 import logging
 
-from karaage.datastores.ldap import AccountDataStore as BaseAccountDataStore, _str_or_none
+from karaage.datastores.ldap import (
+    MachineCategoryDataStore as BaseMachineCategoryDataStore,
+    _str_or_none)
 from kgkeystone.hasher import django_to_passlib
 
 from keystoneclient import client
@@ -27,7 +29,7 @@ from keystoneclient import exceptions
 logger = logging.getLogger('kgkeystone.datastore')
 
 
-class AccountDataStore(BaseAccountDataStore):
+class MachineCategoryDataStore(BaseMachineCategoryDataStore):
     """LDAP Account datastore."""
 
     def save_account(self, account):
