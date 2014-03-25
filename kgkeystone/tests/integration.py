@@ -29,8 +29,10 @@ from StringIO import StringIO
 from os import path
 
 from django.test import TestCase
+import karaage.datastores  # NOQA: prevent circular import
 
-from kgkeystone.datastore.keystone import MachineCategoryDataStore
+from kgkeystone.datastore.keystone import (MachineCategoryDataStore,
+                                           GlobalDataStore)
 
 
 LOG = logging.getLogger("kgkeystone.test.keystone")
@@ -177,8 +179,15 @@ class IntegrationTestCase(TestCase):
         super(IntegrationTestCase, self).setUp()
         self.keystone = Keystone()
         self.keystone.start()
-        self.datastore = MachineCategoryDataStore(KEYSTONE_CONFIG)
-        self.keystone_client = self.datastore.keystone
+        self.mc_datastore = MachineCategoryDataStore(KEYSTONE_CONFIG)
+        self.g_datastore = GlobalDataStore(KEYSTONE_CONFIG)
+        self.keystone_client = self.mc_datastore.keystone
+        config = KEYSTONE_CONFIG
+        self._endpoint = config['ENDPOINT']
+        self._token = config['TOKEN']
+        self._version = config.get('VERSION', None)
+        self._leader_role_name = config['LEADER_ROLE']
+        self._member_role_name = config['MEMBER_ROLE']
 
     def tearDown(self):
         super(IntegrationTestCase, self).tearDown()
