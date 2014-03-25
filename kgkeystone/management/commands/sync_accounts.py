@@ -228,11 +228,11 @@ class Command(BaseCommand):
         return self.mc
 
     def disable_keystone_datastore(self):
-        datastores = settings.DATASTORES['default']
-        settings.DATASTORES['default'] = []
+        datastores = settings.MACHINE_CATEGORY_DATASTORES['default']
+        settings.MACHINE_CATEGORY_DATASTORES['default'] = []
         for datastore in datastores:
-            if datastore['ENGINE'] != 'kgkeystone.datastore.keystone.AccountDataStore':
-                settings.DATASTORES['default'].append(datastore)
+            if datastore['ENGINE'] != 'kgkeystone.datastore.keystone.MachineCategoryDataStore':
+                settings.MACHINE_CATEGORY_DATASTORES['default'].append(datastore)
 
     def project_members_by_role(self, keystone_db, project, role):
         try:
