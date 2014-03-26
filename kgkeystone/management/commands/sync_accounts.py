@@ -428,16 +428,16 @@ class Command(BaseCommand):
                 else:
                     LOG.warning("user %s missing" % permission.user_id)
                 continue
-
+            project_id = permission.project.id
+            project_name = permission.project.name
             try:
-                group = peop_models.Group.objects.get(foreign_id=permission.project.id)
+                group = peop_models.Group.objects.get(foreign_id=project_id)
             except peop_models.Group.DoesNotExist:
-                if permission.project.id in self.system_projects:
-                    LOG.info("skipping project %s owned by system user %s." % \
-                             (k_project.name, self.system_users[project_manager.user_id]))
+                if project_id in self.system_projects:
+                    LOG.info("skipping system project %s." % project_name)
                 else:
                     LOG.warning("project %s (%s) can't be found." % \
-                                (k_project.name, k_project.id))
+                                (project_name, project_id))
                 continue
 
             for role in permission.data['roles']:
