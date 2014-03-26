@@ -254,7 +254,11 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
 
     def delete_account(self, account):
         """Account was deleted."""
-        user = self.keystone.users.get(account.foreign_id)
+        try:
+            user = self.keystone.users.get(account.foreign_id)
+        except exceptions.NotFound:
+            logger.error("Failed to delete user %s not found: %s" % (account.id, account.foreign_id))
+            return False
         logger.debug("Deleting User: %s" % user)
         self.keystone.users.delete(user)
 

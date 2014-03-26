@@ -112,3 +112,17 @@ class MachineCategoryDataStoreTestCase(IntegrationTestCase):
         self.assertTrue(account_exists(account.username))
 
         self.assertFalse(account_exists(account.username + "1"))
+
+    def test_delete_account(self):
+        account = self._create_account()
+        account_exists = self.mc_datastore.account_exists
+        delete_account = self.mc_datastore.delete_account
+
+        self.assertTrue(account_exists(account.username))
+        delete_account(account)
+        self.assertFalse(account_exists(account.username))
+
+    def test_delete_nonexistant_account(self):
+        account = fixtures.AccountFactory()
+        delete_account = self.mc_datastore.delete_account
+        delete_account(account)
