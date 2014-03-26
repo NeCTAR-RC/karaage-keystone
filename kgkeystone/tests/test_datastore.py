@@ -32,6 +32,12 @@ class MachineCategoryDataStoreTestCase(IntegrationTestCase):
             self.mc_datastore.save_account(account)
         return account
 
+    def _create_project(self, use_datastore=True):
+        project = fixtures.ProjectFactory()
+        project.group.foreign_id = None
+        if use_datastore:
+            self.mc_datastore.save_project(project)
+        return project
 
     ###########
     # ACCOUNT #
@@ -126,3 +132,12 @@ class MachineCategoryDataStoreTestCase(IntegrationTestCase):
         account = fixtures.AccountFactory()
         delete_account = self.mc_datastore.delete_account
         delete_account(account)
+
+    def test_save_project(self):
+        project = self._create_project()
+
+        k_project = self.keystone_client.projects.get(project.group.foreign_id)
+        self.assertEqual(k_project.domain_id, 'default')
+        self.assertEqual(k_project.enabled, project.is_active)
+        self.assertEqual(k_project.id, project.group.foreign_id)
+        self.assertEqual(k_project.name, project.pid)
