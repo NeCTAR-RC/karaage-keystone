@@ -134,19 +134,11 @@ class GlobalDataStore(base.GlobalDataStore):
 
     def get_person_details(self, person):
         """Get person's details."""
-        try:
-            user = self.keystone.users.get(person.account.foreign_id)
-        except exceptions.NotFound:
-            return {}
-        return user._info
+        return {}
 
     def person_exists(self, username):
         """Does the person exist?"""
-        try:
-            self.keystone.users.find(name=username)
-        except exceptions.NotFound:
-            return False
-        return True
+        return False
 
     #########
     # GROUP #
