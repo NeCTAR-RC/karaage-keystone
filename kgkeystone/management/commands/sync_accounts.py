@@ -22,9 +22,8 @@ import cPickle
 import logging
 import sys
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.db import transaction, IntegrityError
 
 from karaage.projects import models as proj_models
 from karaage.people import models as peop_models
@@ -33,7 +32,6 @@ from karaage.machines import models as mach_models
 from kgterms import models as terms_models
 from kgkeystone import keystone_models
 from kgkeystone import rcshib_models
-from kgkeystone import models
 
 root = logging.getLogger()
 
@@ -381,7 +379,9 @@ class Command(BaseCommand):
     def sync_default_project(self, rcshib_db, keystone_db):
         for rc_user in rcshib_models.RCUser.objects.using(rcshib_db).all():
             try:
-                shib_attrs = cPickle.loads(rc_user.shibboleth_attributes)
+                # Skip the user if they have never given us any
+                # attributes
+                cPickle.loads(rc_user.shibboleth_attributes)
             except:
                 continue
             if rc_user.state != 'created':
