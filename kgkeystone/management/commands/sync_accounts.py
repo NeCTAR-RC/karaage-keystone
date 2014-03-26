@@ -189,10 +189,10 @@ class Command(BaseCommand):
                 print "--keystone_database is required."
             return "Error"
         LOG.info("Creating initial objects")
+        self.disable_keystone_datastore()
         self.create_machine_category()
         self.create_institute()
         self.create_admin_person()
-        self.disable_keystone_datastore()
         LOG.info("Skipping system accounts")
         self.sync_system_accounts(rcshib_db, keystone_db)
         LOG.info("Syncing user accounts")
