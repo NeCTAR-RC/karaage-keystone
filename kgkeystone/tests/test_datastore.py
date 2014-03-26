@@ -104,3 +104,11 @@ class MachineCategoryDataStoreTestCase(IntegrationTestCase):
                                     account.person.username),
                           'domain_id': 'default',
                           'enabled': True})
+
+    def test_account_exists(self):
+        account = self._create_account()
+        account_exists = self.mc_datastore.account_exists
+
+        self.assertTrue(account_exists(account.username))
+
+        self.assertFalse(account_exists(account.username + "1"))
