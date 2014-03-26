@@ -241,13 +241,13 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
             try:
                 user = self.keystone.users.get(account.foreign_id)
             except exceptions.NotFound:
-                logger.warning("User Not Found: %s" % person_data)
+                logger.error("Failed to save account %s. User not found: %s" % (account.id, account.foreign_id))
             else:
-                logger.debug("Updating User: %s" % person_data)
+                logger.debug("Updating account: %s" % person_data)
                 self.keystone.users.update(user, **person_data)
                 self._heal_account(account)
                 return
-        logger.debug("Creating User: %s" % person_data)
+        logger.debug("Creating account: %s" % person_data)
         kaccount = self.keystone.users.create(**person_data)
         account.foreign_id = kaccount.id
         account.save()
@@ -257,9 +257,10 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         try:
             user = self.keystone.users.get(account.foreign_id)
         except exceptions.NotFound:
-            logger.error("Failed to delete user %s not found: %s" % (account.id, account.foreign_id))
+            logger.error("Failed to delete account %s. User not found: %s" %
+                         (account.id, account.foreign_id))
             return False
-        logger.debug("Deleting User: %s" % user)
+        logger.debug("Deleting account: %s" % user)
         self.keystone.users.delete(user)
 
     def set_account_password(self, account, raw_password):
@@ -269,8 +270,8 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
     def set_account_username(self, account, old_username, new_username):
         """Account's username was changed."""
         user = self.keystone.users.get(account.foreign_id)
-        logger.debug("Updating User's username: %s" % person_data)
-        self.keystone.users.update(user, **person_to_os(person))
+        logger.debug("Updating account's username: %s" % account.id)
+        self.keystone.users.update(user, **account_to_os(account))
 
     def add_account_to_group(self, account, group):
         """Add account to group."""
@@ -300,7 +301,7 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         for role in roles:
             logger.info("Revoking User %s role %s in %s" % (account, role, project))
             self.keystone.roles.revoke(role, user=account.foreign_id,
-                                      project=project.group.foreign_id)
+                                       project=project.group.foreign_id)
 
     def add_account_to_institute(self, account, institute):
         """Add account to institute."""
@@ -330,7 +331,8 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         try:
             user = self.keystone.users.get(account.foreign_id)
         except exceptions.NotFound:
-            logger.warning("Account Not Found: %s" % account)
+            logger.warning("Failed to get account details. User not found: %s" %
+                           account.foreign_id)
             return {}
         return user._info
 
@@ -363,11 +365,11 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
 
     def add_leader_to_project(self, person, project):
         """Add account to project."""
-        pass
+        logger.debug("Backend doesn't support adding a leader to a project .")
 
     def remove_leader_from_project(self, person, project):
         """Remove account from project."""
-        pass
+        logger.debug("Backend doesn't support removing a leader from a project.")
 
     def save_project(self, project):
         """Project was saved."""
@@ -376,7 +378,8 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
             try:
                 proj = self.keystone.projects.get(project.group.foreign_id)
             except exceptions.NotFound:
-                logger.warning("Project Not Found: %s" % project_data)
+                logger.error("Failed to save project. Project not found: %s"
+                             % project.group.foreign_id)
             else:
                 logger.debug("Updating project: %s" % project_data)
                 self.keystone.projects.update(proj, **project_data)
@@ -392,7 +395,8 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         try:
             proj = self.keystone.projects.get(project.group.foreign_id)
         except exceptions.NotFound:
-            logger.warning("Project Not Found: %s" % project)
+            logger.error("Failed to delete project. Project not found: %s" %
+                         project.group.foreign_id)
             return False
         logger.debug("Deleting project: %s" % project)
         self.keystone.projects.delete(proj)
@@ -402,7 +406,8 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         try:
             project = self.keystone.projects.get(project.group.foreign_id)
         except exceptions.NotFound:
-            logger.warning("Project Not Found: %s" % project)
+            logger.warning("Failed to get project details. Project not found: %s" %
+                           project.group.foreign_id)
             return {}
         return project._info
 
