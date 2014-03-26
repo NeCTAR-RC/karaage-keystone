@@ -234,11 +234,6 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
             project = Project.objects.get(group=group)
             self.add_account_to_project(account, project)
 
-    def edit_form(self, account):
-        """Return the edit form for this account type."""
-        from kgkeystone.forms import AccountDetails
-        return AccountDetails(account)
-
     def save_account(self, account):
         """Account was saved."""
         person_data = account_to_os(account)
