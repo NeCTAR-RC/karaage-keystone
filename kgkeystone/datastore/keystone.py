@@ -324,7 +324,7 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
     def get_account_details(self, account):
         """Get the account details"""
         try:
-            user = self.keystone.users.get(person.account.foreign_id)
+            user = self.keystone.users.get(account.foreign_id)
         except exceptions.NotFound:
             logger.warning("Account Not Found: %s" % account)
             return {}

@@ -90,3 +90,17 @@ class MachineCategoryDataStoreTestCase(IntegrationTestCase):
         self.mc_datastore.save_account(account)
         k_account = self.keystone_client.users.get(account.foreign_id)
         self.assertFalse(k_account.enabled)
+
+    def test_account_details(self):
+        account = self._create_account()
+        get_account_details = self.mc_datastore.get_account_details
+        result = get_account_details(account)
+        # At the moment we don't care about the links
+        del result['links']
+        self.assertEqual(result,
+                         {'name': account.username,
+                          'id': account.foreign_id,
+                          'email': ('%s@example.com' %
+                                    account.person.username),
+                          'domain_id': 'default',
+                          'enabled': True})
