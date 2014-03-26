@@ -36,7 +36,8 @@ def account_to_os(account):
     data = {'name': account.username,
             'domain': 'default',
             'email': account.person.email,
-            'enabled': not account.person.is_locked()}
+            'enabled': (not account.person.is_locked()
+                        and account.login_enabled)}
     if account.default_project and account.default_project.group.foreign_id:
         default_project_id = account.default_project.group.foreign_id
         data['default_project'] = default_project_id

@@ -18,6 +18,7 @@
 from __future__ import unicode_literals
 
 from karaage.tests import fixtures
+from factory import fuzzy
 
 from kgkeystone.tests.integration import IntegrationTestCase
 
@@ -45,3 +46,47 @@ class MachineCategoryDataStoreTestCase(IntegrationTestCase):
         self.assertEqual(account.username, k_account.name)
         self.assertEqual(account.foreign_id, k_account.id)
         self.assertTrue(k_account.enabled)
+
+    def test_update_account(self):
+        account = self._create_account()
+
+        account.person.email = ('%s@example.com' %
+                                fuzzy.FuzzyText().fuzz())
+        account.username = fuzzy.FuzzyText().fuzz()
+        account.login_enabled = False
+        self.mc_datastore.save_account(account)
+        k_account = self.keystone_client.users.get(account.foreign_id)
+        person = account.person
+
+        self.assertEqual(k_account.email, person.email)
+        self.assertEqual(k_account.name, account.username)
+        self.assertEqual(k_account.id, account.foreign_id)
+        self.assertFalse(k_account.enabled)
+
+    def test_disable_account(self):
+        account = self._create_account()
+
+        # Check enabled
+        self.mc_datastore.save_account(account)
+        k_account = self.keystone_client.users.get(account.foreign_id)
+        self.assertTrue(k_account.enabled)
+
+        # Check disable
+        account.login_enabled = False
+        self.mc_datastore.save_account(account)
+        k_account = self.keystone_client.users.get(account.foreign_id)
+        self.assertFalse(k_account.enabled)
+
+    def test_lock_person(self):
+        account = self._create_account()
+
+        # Check enabled
+        self.mc_datastore.save_account(account)
+        k_account = self.keystone_client.users.get(account.foreign_id)
+        self.assertTrue(k_account.enabled)
+
+        # Check disable
+        account.person.lock()
+        self.mc_datastore.save_account(account)
+        k_account = self.keystone_client.users.get(account.foreign_id)
+        self.assertFalse(k_account.enabled)
