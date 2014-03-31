@@ -14,16 +14,18 @@ fi
 
 echo -e "\nFlake8"
 echo "#########################"
-./flake8-diff.py --changed --verbose
-if [ ! $? -eq 0 ]
+if [[ "$DH_INTERNAL_OVERRIDE" != 'dh_auto_test' ]]
 then
-    RETURN=1
+    ./flake8-diff.py --changed --verbose
+    if [ ! $? -eq 0 ]
+    then
+        RETURN=1
+    fi
 fi
-
 
 echo -e "\n\nTests"
 echo "#########################"
-./manage.py test -v 2 $TESTS
+./manage.py test --settings=karaage.tests.settings -v 2 $TESTS
 if [ ! $? -eq 0 ]
 then
     RETURN=1

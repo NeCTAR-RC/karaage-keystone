@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+%:
+	dh $@ --with python2
+
+# Disabled until karaage package support running tests when building a
+# package https://github.com/Karaage-Cluster/karaage/issues/231
+# override_dh_auto_test:
+# 	./run_tests.sh
