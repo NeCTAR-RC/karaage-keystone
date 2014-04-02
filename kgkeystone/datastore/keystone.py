@@ -22,7 +22,7 @@ from karaage.datastores import base
 from karaage.people.models import Group
 from karaage.projects.models import Project
 
-from keystoneclient import client
+from keystoneclient.v3 import client as v3_client
 from keystoneclient import exceptions
 
 logger = logging.getLogger('kgkeystone.datastore')
@@ -59,12 +59,10 @@ class GlobalDataStore(base.GlobalDataStore):
         self.config = config
         self._endpoint = config['ENDPOINT']
         self._token = config['TOKEN']
-        self._version = config.get('VERSION', None)
         self._leader_role_name = config['LEADER_ROLE']
         self._member_role_name = config['MEMBER_ROLE']
 
-        self.keystone = client.Client(
-            version=self._version,
+        self.keystone = v3_client.Client(
             token=self._token,
             endpoint=self._endpoint)
 
@@ -169,12 +167,10 @@ class MachineCategoryDataStore(base.MachineCategoryDataStore):
         self.config = config
         self._endpoint = config['ENDPOINT']
         self._token = config['TOKEN']
-        self._version = config.get('VERSION', None)
         self._leader_role_name = config['LEADER_ROLE']
         self._member_role_name = config['MEMBER_ROLE']
 
-        self.keystone = client.Client(
-            version=self._version,
+        self.keystone = v3_client.Client(
             token=self._token,
             endpoint=self._endpoint)
 
