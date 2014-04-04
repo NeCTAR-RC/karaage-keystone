@@ -121,12 +121,14 @@ class Keystone():
         LOG.info('starting Keystone')
 
         FNULL = open(os.devnull, 'w')
-        proc = subprocess.Popen([which('keystone-manage')[0],
-                                 '--config-dir',
-                                 self.config_dir,
-                                 'db_sync'],
-                                stdout=FNULL,
-                                stderr=FNULL)
+        command = [
+            which('keystone-manage')[0],
+            '--config-dir',
+            self.config_dir,
+            'db_sync',
+        ]
+        LOG.debug('Creating Keystone DB: %s', ' '.join(command))
+        proc = subprocess.Popen(command, stdout=FNULL, stderr=FNULL)
         out, err = proc.communicate()
         if proc.returncode != 0:
             print out
@@ -134,12 +136,11 @@ class Keystone():
             self._cleanup()
             raise Exception('Failed to run db_sync')
 
+        command = [which('keystone-all')[0], '--config-dir', self.config_dir]
+        LOG.debug('Starting Keystone: %s', ' '.join(command))
         try:
-            self._process = subprocess.Popen([
-                which('keystone-all')[0],
-                '--config-dir',
-                self.config_dir,
-            ], stdout=FNULL, stderr=FNULL)
+            self._process = subprocess.Popen(command,
+                                             stdout=FNULL, stderr=FNULL)
             self._wait_to_start()
         except:
             self.stop()
