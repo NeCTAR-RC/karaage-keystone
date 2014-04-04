@@ -1,0 +1,5 @@
+Django >= 1.6
+South >= 0.7
+python-keystoneclient
+-e git://github.com/NeCTAR-RC/karaage-terms.git#egg=karaage-terms
+-e git://github.com/NeCTAR-RC/karaage.git#egg=karaage

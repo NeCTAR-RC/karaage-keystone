@@ -42,9 +42,10 @@ with open(path, 'rU') as file:
                     break
 
 
-tests_require = [
-    "mock",
-]
+tests_require = open('test-requirements.txt').readlines()
+install_requires = map(lambda r: r.rsplit('#egg=', 1)[-1].strip(),
+                       open('requirements.txt').readlines())
+
 
 setup(
     name="karaage-keystone",
@@ -56,15 +57,7 @@ setup(
     include_package_data=True,
     license="GPL3+",
     packages=find_packages(),
-    install_requires=[
-        "python > 2.4",
-        "Django >= 1.6",
-        "South >= 0.7",
-        "karaage >= 3.0",
-        "karaage-terms",
-        "python-keystoneclient",
-    ],
+    install_requires=install_requires,
     tests_require=tests_require,
-    extras_require={
-        'tests': tests_require},
+    extras_require={'tests': tests_require},
 )
