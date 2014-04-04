@@ -99,7 +99,8 @@ class Keystone():
         tmpl_filename = path.join(BASE_PATH, 'config', 'keystone.conf')
         tmpl = string.Template(open(tmpl_filename).read())
         fd = open(path.join(self.config_dir, 'keystone.conf'), "w")
-        fd.write(tmpl.substitute(log_dir=self.log_dir,
+        fd.write(tmpl.substitute(config_dir=self.config_dir,
+                                 log_dir=self.log_dir,
                                  working_dir=self.working_dir,
                                  public_port=self.public_port,
                                  admin_port=self.admin_port))
